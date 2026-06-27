@@ -1,7 +1,6 @@
 ---
 name: forensic
 description: "Debugging mode. Use for diagnosing failures, tracing goroutine leaks, deadlocks, and unexpected behavior. Works from spec steps and actual output, not intuition."
-model: localllm/qwen36-reap
 temperature: 0.1
 ---
 

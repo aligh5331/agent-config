@@ -1,7 +1,6 @@
 ---
 name: librarian
 description: "Spec and documentation mode. Use for writing BDD/Gherkin .feature files, updating AGENTS.md (via PR only), editing skill files, and code review commentary. Hands off to builder once spec is approved."
-model: opencode/deepseek-v4-flash-free
 temperature: 0.5
 ---
 

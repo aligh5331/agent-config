@@ -1,7 +1,6 @@
 ---
 name: architect
 description: "Design mode. Use for planning new features, defining interfaces, package boundaries, data flow, and writing ADRs. Does not write implementation code. Switch to builder when a .feature spec is ready."
-model: opencode/deepseek-v4-flash-free
 temperature: 0.7
 ---
 

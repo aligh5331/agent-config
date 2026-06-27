@@ -1,7 +1,6 @@
 ---
 name: builder
 description: "Implementation mode. Use for writing Go code from an approved .feature spec. Requires a spec file to exist before starting. Switch to forensic for debugging."
-model: localllm/qwen36-reap
 temperature: 0.2
 ---
 
