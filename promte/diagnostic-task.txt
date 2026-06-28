@@ -1,0 +1,23 @@
+DIAGNOSTIC TASK — do not modify any files yet.
+
+The tester ran and produced this failure report:
+
+--- TESTER OUTPUT ---
+[PASTE TESTER OUTPUT HERE]
+--- END TESTER OUTPUT ---
+
+Produce a diagnosis report covering every distinct failure in the output.
+For each failure use exactly this structure:
+
+Symptom:      what the tester observed
+Spec step:    which scenario or startup step this broke
+Actual:       what the code/config currently does
+Root cause:   why it fails (be specific — file, line, value if known)
+Evidence:     the exact line(s) from the tester output that confirm this
+Fix:          the exact change needed (file path, what to add/remove/change)
+Risk:         anything the fix might break
+
+Do not group multiple failures into one entry — one entry per failure.
+Do not modify any files.
+Do not run any commands.
+When the report is complete, end with: "Diagnosis complete. Ready for Builder."
