@@ -56,6 +56,11 @@ full dependency chain (e.g. the auth service compose includes postgres). Run
 `docker compose up` from the directory containing the compose file — do not add extra services
 manually. Trust the compose file's dependency graph.
 
+### Step 2.5 - always biuld fresh (remove cache)
+
+remove any cache that may change the testing result.
+example: biuld cache of the previous test atemps with diferent code
+
 ### Step 3 — Locate spec file
 
 Search for a spec file in this order:
