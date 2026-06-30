@@ -56,7 +56,7 @@ full dependency chain (e.g. the auth service compose includes postgres). Run
 `docker compose up` from the directory containing the compose file — do not add extra services
 manually. Trust the compose file's dependency graph.
 
-### Step 2.5 - always biuld fresh (remove cache)
+### Step 2.5 - always run fresh (remove cache)
 
 remove any cache that may change the testing result.
 example: biuld cache of the previous test atemps with diferent code
@@ -253,12 +253,53 @@ Failure stage: [[SUITE_COMPILE | STARTUP | TEST_RUN | TIMEOUT]]
 [[verbatim output, untruncated]]
 --- END OUTPUT ---
 ```
-Then stop. Do not attempt a fix. Do not suggest a fix. Hermes handles the retry loop.
+Then stop. Do not attempt a fix. Do not suggest a fix. user handles the retry loop.
 
 ---
 
+## Known pitfalls — do not do these
+ 
+These are real failure modes observed in past sessions, not hypothetical risks.
+If you find yourself about to do any of these, STOP — this is the signal to
+HALT and report, not a reason to find a cleverer workaround.
+ 
+- Creating a `docker-compose.override.yml` to force a service to run
+- Modifying a `Dockerfile` to force a service to build or run
+- Modifying a `docker-compose.yml` to force a service to start
+- Copying files a service needs into place manually (keys, certs, config,
+  migrations, or anything else the service expects to find on its own)
+- Building images in `/tmp/` or any directory outside the repo, with a
+  Dockerfile you authored, to route around a build failure
+- Manually inserting or editing database rows (including migration
+  tracking tables) to force a service past a startup check
+- Starting a service or stack that was not named in your spin-up scope,
+  even if a dependency seems to require it
+All of these share the same shape: patching the *environment* live to get
+a green result, instead of reporting that the *repo* cannot produce that
+result on its own. A PASS obtained this way is not a real PASS — it
+describes a hand-assembled sandbox, not what `docker compose up --build`
+will do on a fresh checkout. It also means the same failure resurfaces on
+every future test run, since nothing in the repo changed.
+ 
+## What to do instead
+ 
+When a spin-up step fails for a reason that isn't a transient timing issue:
+ 
+1. Capture the exact error, the file/line it traces to if visible, and
+   the command that triggered it
+2. Do NOT attempt a fix, workaround, or substitute build
+3. Tear down anything already started
+4. Report as STARTUP FAIL (or SUITE_COMPILE FAIL if it failed before
+   spin-up) with the verbatim error in the FULL OUTPUT block
+5. Stop — Forensic and Builder handle the actual fix, then you re-run
+If multiple unrelated startup failures occur in the same run (for example,
+a missing key file AND a missing migrations directory), report all of them
+in the same FAIL output rather than fixing the first one to see if there's
+a second one underneath. Each one is a separate blocker for Forensic to
+diagnose; surfacing them together saves a retry cycle.
+ 
 ## Rules
-
+ 
 - Do NOT modify any source files
 - Do NOT modify the spec file or any `.feature` file
 - Do NOT attempt to fix compilation errors, startup errors, or test failures — report and stop
@@ -268,11 +309,10 @@ Then stop. Do not attempt a fix. Do not suggest a fix. Hermes handles the retry 
 - Derive everything from the repo — never hardcode paths, ports, or toolchain assumptions
 - Use `$APP_PID` for NATIVE teardown — never `fuser`
 - COMPOSE: prefer `docker compose up -d` (no rebuild) if images exist; use `--build` only if not
-
 ---
-
+ 
 ## Termination heuristics
-
+ 
 - Unknown language after scanning workdir → HALT immediately, report
 - No deployment config found → HALT immediately, report
 - No spec found after walking two directory levels up → HALT immediately, report
@@ -281,3 +321,4 @@ Then stop. Do not attempt a fix. Do not suggest a fix. Hermes handles the retry 
 - Healthcheck not healthy after 10 attempts → STARTUP FAIL, tear down, report
 - Test run wall-clock exceeds 150s → TIMEOUT FAIL, tear down, report
 - Re-reading the same file ≥3 times with no new conclusion → stop, report current detection state
+ 
