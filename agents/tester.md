@@ -56,10 +56,39 @@ full dependency chain (e.g. the auth service compose includes postgres). Run
 `docker compose up` from the directory containing the compose file — do not add extra services
 manually. Trust the compose file's dependency graph.
 
-### Step 2.5 - always run fresh (remove cache)
+### Step 2.5 — invalidate stale build artifacts before spin-up
 
-remove any cache that may change the testing result.
-example: biuld cache of the previous test atemps with diferent code
+Purpose: a Docker image built from a PREVIOUS Builder session's source can
+still be sitting in the local image cache. If `docker compose up` reuses
+that stale image instead of rebuilding from the current source tree, the
+test verifies old code, not the fix that's actually under test. This step
+exists to prevent that specific failure mode — it is not a general
+"clean everything" step.
+
+For each service in scope this run, before spin-up:
+
+  docker compose build --no-cache <service>
+
+This forces a full rebuild from the current source tree for that service
+only, ignoring any cached Docker build layers. Do this instead of
+`docker compose up --build`, which can still reuse cached layers for
+unchanged-looking COPY steps even when the underlying source changed.
+
+Scope strictly to services under test in this run. Do NOT:
+  - run `docker system prune` or any command that removes images,
+    containers, or volumes belonging to OTHER projects on this host
+  - run `go clean -cache` or `go clean -modcache` (this invalidates the
+    Go build cache and module cache for the entire host, not just gobox,
+    and will make every subsequent `go build` anywhere on the machine
+    slow for no benefit to this test)
+  - delete named Docker volumes (postgres data, minio data, redis data)
+    as part of this step — volume cleanup belongs in Teardown, not here,
+    and removing it pre-emptively defeats the point of `depends_on`
+    healthchecks that assume a known starting state
+
+If `--no-cache` reveals a build failure that a cached build was silently
+masking, that is itself a real finding — report it per the Known Pitfalls
+section, do not fall back to a cached build to get past it.
 
 ### Step 3 — Locate spec file
 
